@@ -1,5 +1,5 @@
 {
-    "name": "fractional-indexing/fractional-indexing-php",
+    "name": "lucas-fernandes/fractional-indexing",
     "description": "A PHP port of the fractional-indexing algorithm.",
     "type": "library",
     "license": "MIT",
