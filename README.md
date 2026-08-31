@@ -2,7 +2,17 @@
 
 Compatível com os casos de referência e com a semântica do [rocicorp/fractional-indexing](https://github.com/rocicorp/fractional-indexing).
 
-Fractional indexing é uma técnica para gerar chaves de ordenação que permitem inserir itens em qualquer posição de uma lista sem precisar reordenar os itens adjacentes.
+O **Fractional Indexing** é uma técnica matemática e algorítmica utilizada para gerar chaves de ordenação (order keys) lexicográficas.
+
+### Qual problema isso resolve?
+Em sistemas tradicionais, quando você possui uma lista ordenada (ex: Kanban board, lista de tarefas) e o usuário move um item da posição 10 para a posição 2, o sistema precisa atualizar a coluna "order" do item movido e de todos os outros itens adjacentes que foram empurrados para baixo.
+Isso causa overhead intenso no banco de dados e dificuldade absurda em ambientes de concorrência ou sincronização offline-first.
+
+Com o Fractional Indexing, a chave gerada possui um comprimento variável. Ao invés de reordenar toda a lista, a técnica apenas "calcula o ponto médio" entre as chaves da posição 1 e da posição 3. Resultado: **apenas 1 item é atualizado no banco de dados**.
+
+### Diferença para o LexoRank
+O Jira popularizou o algoritmo **LexoRank**, que também gera chaves lexicográficas. No entanto, o LexoRank geralmente sofre com limitação de tamanho estático, necessitando de um sistema complexo de *buckets* e processos de *rebalanceamento* periódico quando as chaves se esgotam ou ficam muito densas. 
+O *Fractional Indexing* resolve esse problema permitindo strings de comprimento dinâmico que podem (teoricamente) crescer infinitamente sem a necessidade de rebalanceamento, simplificando drasticamente o backend.
 
 ## Diferenciais
 
@@ -21,45 +31,62 @@ Fractional indexing é uma técnica para gerar chaves de ordenação que permite
 composer require lucas-fernandes/fractional-indexing
 ```
 
-## Quick Start
+## Quick Start (generateKeyBetween)
+
+A função base permite gerar chaves passando os limites anterior e posterior. 
+O valor `null` é usado para indicar os extremos (início ou fim da lista).
 
 ```php
 use FractionalIndexing\FractionalIndexing;
 
-// Gerar a primeira chave
+// Inserir o primeiro item da lista inteira
 $firstKey = FractionalIndexing::generateKeyBetween(null, null); // "a0"
 
-// Inserir depois
+// Inserir um item APÓS o primeiro (anexar ao fim)
 $secondKey = FractionalIndexing::generateKeyBetween($firstKey, null); // "a1"
 
-// Inserir antes
+// Inserir um item ANTES do primeiro (anexar ao início)
 $zerothKey = FractionalIndexing::generateKeyBetween(null, $firstKey); // "Zz"
 
-// Inserir no meio
+// Inserir um item NO MEIO de dois elementos
 $midKey = FractionalIndexing::generateKeyBetween($firstKey, $secondKey); // "a0V"
 ```
 
-## Geração em Lote
+## Geração em Lote (generateNKeysBetween)
 
-Para inserir múltiplos itens de uma vez entre dois elementos:
+Para inserir múltiplos itens de uma vez (por exemplo, ao arrastar um bloco inteiro de elementos para o meio de outros dois):
 
 ```php
 $keys = FractionalIndexing::generateNKeysBetween('a0', 'a1', 3);
-// ['a0G', 'a0V', 'a0l']
+// Retorna: ['a0G', 'a0V', 'a0l']
 ```
 
 ## Banco de Dados & Ordenação
 
 As chaves são geradas para serem ordenadas **lexicograficamente**.
-Se armazenadas em banco (ex: MySQL, Postgres), a coluna precisa ter uma **collation case-sensitive** (ex: `utf8mb4_bin`).
+Se armazenadas em banco (ex: MySQL, Postgres), a coluna precisa ter uma **collation case-sensitive** (ex: `utf8mb4_bin`), caso contrário, `a0` e `A0` seriam tratados como idênticos e causariam falha na ordenação.
 
-> **Nota:** Não existe limite rígido de caracteres na geração da chave. É responsabilidade da aplicação limitar na coluna caso a string cresça muito após milhares de inserções consecutivas no mesmo ponto.
+Exemplo de schema MySQL:
+```sql
+CREATE TABLE items (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    order_key VARCHAR(255) COLLATE utf8mb4_bin NOT NULL,
+    INDEX (order_key)
+);
+```
 
-## Testes
+### Limitações Conhecidas
 
-A biblioteca cobre os vetores de teste (Golden Tests e Stress Tests) portados da implementação original para atestar paridade semântica. 
-A compatibilidade byte-for-byte poderá ser declarada quando houver verificação automatizada comparando o binário original em JS com os outputs do PHP.
+> **Nota de Crescimento:** O Fractional Indexing não impõe limite de tamanho na geração das chaves. Quanto mais inserções "midpoint" (inserir repetidamente entre duas chaves existentes super densas) ocorrem, maior a string fica. É responsabilidade da aplicação consumidora lidar com os limites da coluna do banco de dados (ex: `VARCHAR(255)`) e tratar o caso improvável em que o limite de armazenamento seja atingido após milhares de inserções consecutivas no mesmo espaço reduzido.
 
+## Testes e Tratamento de Erros
+
+A biblioteca lança `FractionalIndexing\Exception\FractionalIndexingException` caso parâmetros inválidos ou fora de escopo sejam recebidos.
+
+A suíte de testes cobre todos os vetores de teste portados da implementação original para atestar paridade semântica (Golden e Stress Tests). A compatibilidade *byte-for-byte* poderá ser declarada quando houver verificação automatizada via CI comparando o binário original em JS com os outputs do PHP.
+
+Para rodar os testes localmente:
 ```bash
 composer install
 ./vendor/bin/phpunit
