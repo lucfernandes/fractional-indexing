@@ -1,0 +1,27 @@
+{
+    "name": "fractional-indexing/fractional-indexing-php",
+    "description": "A PHP port of the fractional-indexing algorithm.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Contributor"
+        }
+    ],
+    "require": {
+        "php": ">=7.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^7.5 || ^8.0 || ^9.0 || ^10.0 || ^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "FractionalIndexing\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "FractionalIndexing\\Tests\\": "tests/"
+        }
+    }
+}
