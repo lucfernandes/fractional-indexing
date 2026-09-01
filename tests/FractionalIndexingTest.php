@@ -1,9 +1,9 @@
 <?php
 
-namespace FractionalIndexing\Tests;
+namespace LucFernandes\FractionalIndexing\Tests;
 
-use FractionalIndexing\FractionalIndexing;
-use FractionalIndexing\Exception\FractionalIndexingException;
+use LucFernandes\FractionalIndexing\FractionalIndexing;
+use LucFernandes\FractionalIndexing\Exception\FractionalIndexingException;
 use PHPUnit\Framework\TestCase;
 
 /**

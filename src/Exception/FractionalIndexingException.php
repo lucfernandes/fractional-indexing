@@ -1,6 +1,6 @@
 <?php
 
-namespace FractionalIndexing\Exception;
+namespace LucFernandes\FractionalIndexing\Exception;
 
 /**
  * Exceção customizada lançada pela biblioteca Fractional Indexing.

@@ -1,8 +1,8 @@
 <?php
 
-namespace FractionalIndexing;
+namespace LucFernandes\FractionalIndexing;
 
-use FractionalIndexing\Exception\FractionalIndexingException;
+use LucFernandes\FractionalIndexing\Exception\FractionalIndexingException;
 
 /**
  * Biblioteca para geração de chaves de ordenação (order keys) utilizando Fractional Indexing.
