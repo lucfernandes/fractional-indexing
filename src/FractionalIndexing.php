@@ -95,6 +95,11 @@ class FractionalIndexing
      */
     private static function midpoint($a, $b, $digits, $lookup)
     {
+        $a = (string) $a;
+        if ($b !== null) {
+            $b = (string) $b;
+        }
+        
         $zero = $digits[0];
         // Nota JS x PHP: strcmp é mandatório para evitar coerção implícita (ex: "495" < "50" é int 495 < 50 => false)
         if ($b !== null && strcmp($a, $b) >= 0) {
