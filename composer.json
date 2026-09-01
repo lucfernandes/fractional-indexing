@@ -24,9 +24,5 @@
       "LucFernandes\\FractionalIndexing\\Tests\\": "tests/"
     }
   },
-  "config": {
-    "platform": {
-      "php": "7.1.33"
-    }
-  }
+  "config": {}
 }
